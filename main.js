@@ -1,6 +1,7 @@
 import Tree from './tree.js'
 import { huffmanEncoding, encode, decode } from './huffman.js'
 import { lz78Encoding, lz78Decoding } from './lz78.js'
+import { encrypt, decrypt } from './transposition.js'
 
 const dictionary = (key, companyTree, person) => {
   if (key === 'INSERT') companyTree.insert(person)
@@ -26,6 +27,7 @@ async function readFile() {
 }
 
 async function mainFunction(data) {
+  const password = "contraseña"
   await Promise.all(data.map(async (item) => {
     const operationString = item[0]
     const person = item[1]
@@ -33,6 +35,7 @@ async function mainFunction(data) {
     person?.datebirth
     person?.companies
     person.lettersCompressed = await getLetters(person.dpi)
+    person.conversationsEncrypted = await getConversations(person.dpi, password)
 
     await Promise.all(person?.companies?.map(company => {
       // create tree for each company
@@ -51,8 +54,8 @@ async function mainFunction(data) {
     }))
   }))
 
-  const companyName = 'Bogisich Group'
-  const dpiSearch = '1041443605068'
+  const companyName = 'Spinka Group'
+  const dpiSearch = '2739728493209'
   const treeFromCompany = trees[companyName]
 
   console.log('SEARCH', treeFromCompany.tree.search({ dpi: encode(dpiSearch, treeFromCompany.huffman.dictLetters) })?.map(person => {
@@ -63,6 +66,9 @@ async function mainFunction(data) {
       'letters': person.lettersCompressed.map((letter) => {
         const { dictionary, textCompressed } = letter
         return lz78Decoding(dictionary, textCompressed)
+      }),
+      'conversations': person.conversationsEncrypted.map((conversation) => {
+        return decrypt('contraseña', conversation)
       })
     }
   }))
@@ -72,7 +78,7 @@ async function getLetters(dpi) {
   const letters = []
   
   for (let i = 1; i < 100; i++) {
-    const path = '/inputs/inputs/REC-' + dpi + '-' + i + '.txt'
+    const path = '/recomendaciones//REC-' + dpi + '-' + i + '.txt'
 
     const compressedLetter = await fetch(path)
       .then(response => {
@@ -93,6 +99,33 @@ async function getLetters(dpi) {
   console.clear()
 
   return letters
+}
+
+async function getConversations(dpi, password) {
+  const conversations = []
+
+  for (let i = 1; i < 100; i++) {
+    const path = '/conversaciones/CONV-' + dpi + '-' + i + '.txt'
+
+    const encryptedConv = await fetch(path)
+      .then(response => {
+        if (!response.ok) {
+          i = 100
+          return -1
+        }
+        return response.text()
+      })
+      .then(data => {
+        if (data != -1) return encrypt(password, data)
+      })
+
+    conversations.push(encryptedConv)
+    if (conversations[conversations.length - 1] == undefined) conversations.pop()
+  }
+
+  console.clear()
+
+  return conversations
 }
 
 mainFunction(await readFile())
