@@ -1,6 +1,3 @@
-const PASSWORD = "contraseña123"
-const MESSAGE = "Mensaje secreto super oculto que nadie puede adivinar porque esta encriptado 😎🤙"
-
 export function encrypt(password, message) {
   const fullLength = message.length
   const array = [password]

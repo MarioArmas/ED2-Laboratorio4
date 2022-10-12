@@ -27,7 +27,7 @@ async function readFile() {
 }
 
 async function mainFunction(data) {
-  const password = "contraseña"
+  const password = prompt("Cree su contraseña")
   await Promise.all(data.map(async (item) => {
     const operationString = item[0]
     const person = item[1]
@@ -57,6 +57,7 @@ async function mainFunction(data) {
   const companyName = 'Spinka Group'
   const dpiSearch = '2739728493209'
   const treeFromCompany = trees[companyName]
+  const inputPassword = prompt("Ingrese su contraseña")
 
   console.log('SEARCH', treeFromCompany.tree.search({ dpi: encode(dpiSearch, treeFromCompany.huffman.dictLetters) })?.map(person => {
     return {
@@ -68,7 +69,7 @@ async function mainFunction(data) {
         return lz78Decoding(dictionary, textCompressed)
       }),
       'conversations': person.conversationsEncrypted.map((conversation) => {
-        return decrypt('contraseña', conversation)
+        return decrypt(inputPassword, conversation)
       })
     }
   }))
